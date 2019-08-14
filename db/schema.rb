@@ -10,12 +10,33 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_08_08_125149) do
+ActiveRecord::Schema.define(version: 2019_08_13_011024) do
+
+  create_table "active_storage_attachments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "record_type", null: false
+    t.bigint "record_id", null: false
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "filename", null: false
+    t.string "content_type"
+    t.text "metadata"
+    t.bigint "byte_size", null: false
+    t.string "checksum", null: false
+    t.datetime "created_at", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
 
   create_table "addresses", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
     t.bigint "user_id", null: false
-    t.integer "postal_code", null: false
-    t.string "prefecture", null: false
+    t.string "postal_code", null: false
+    t.integer "prefecture_id", null: false
     t.string "city", null: false
     t.string "address_number", null: false
     t.string "building_name"
@@ -33,9 +54,8 @@ ActiveRecord::Schema.define(version: 2019_08_08_125149) do
 
   create_table "cards", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
     t.bigint "user_id", null: false
-    t.integer "card_number", null: false
-    t.date "expiration_date", null: false
-    t.integer "card_security_code", null: false
+    t.string "customer_id", null: false
+    t.string "card_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_cards_on_user_id"
@@ -77,7 +97,7 @@ ActiveRecord::Schema.define(version: 2019_08_08_125149) do
   end
 
   create_table "images", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
-    t.text "url", null: false
+    t.text "url"
     t.bigint "product_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -112,21 +132,19 @@ ActiveRecord::Schema.define(version: 2019_08_08_125149) do
   end
 
   create_table "products", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
-    t.bigint "seller_user_id", null: false
-    t.bigint "buyer_user_id"
+    t.bigint "seller_id", null: false
     t.string "name", null: false
     t.text "text", null: false
-    t.integer "status", null: false
-    t.integer "postage_burden", null: false
-    t.string "buyer_area", null: false
-    t.string "delivery_days", null: false
+    t.integer "status_id"
+    t.integer "postage_burden_id"
+    t.integer "prefecture_id"
+    t.integer "delivery_days_id"
     t.integer "price", null: false
-    t.integer "sales_status", default: 0, null: false
+    t.integer "sales_status_id", default: 1, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["buyer_user_id"], name: "index_products_on_buyer_user_id"
     t.index ["name"], name: "index_products_on_name"
-    t.index ["seller_user_id"], name: "index_products_on_seller_user_id"
+    t.index ["seller_id"], name: "index_products_on_seller_id"
   end
 
   create_table "ratings", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
@@ -146,6 +164,27 @@ ActiveRecord::Schema.define(version: 2019_08_08_125149) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "sns_credentials", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+    t.string "provider"
+    t.string "uid"
+    t.bigint "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_sns_credentials_on_user_id"
+  end
+
+  create_table "trades", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+    t.bigint "product_id", null: false
+    t.bigint "seller_id", null: false
+    t.bigint "buyer_id", null: false
+    t.string "pay_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["buyer_id"], name: "index_trades_on_buyer_id"
+    t.index ["product_id"], name: "index_trades_on_product_id"
+    t.index ["seller_id"], name: "index_trades_on_seller_id"
+  end
+
   create_table "users", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -156,17 +195,18 @@ ActiveRecord::Schema.define(version: 2019_08_08_125149) do
     t.datetime "updated_at", null: false
     t.string "nickname", default: "", null: false
     t.text "introduction"
-    t.string "firstname", null: false
-    t.string "lasttname", null: false
-    t.string "firstname_kana", null: false
-    t.string "lastname_kana", null: false
-    t.date "birthday", null: false
-    t.integer "tel", null: false
+    t.string "firstname"
+    t.string "lastname"
+    t.string "firstname_kana"
+    t.string "lastname_kana"
+    t.date "birthday"
+    t.string "tel"
     t.integer "sales_amount", default: 0
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "addresses", "users"
   add_foreign_key "cards", "users"
   add_foreign_key "category_brands", "brands"
@@ -182,8 +222,11 @@ ActiveRecord::Schema.define(version: 2019_08_08_125149) do
   add_foreign_key "product_categories", "products"
   add_foreign_key "product_sizes", "products"
   add_foreign_key "product_sizes", "sizes"
-  add_foreign_key "products", "users", column: "buyer_user_id"
-  add_foreign_key "products", "users", column: "seller_user_id"
+  add_foreign_key "products", "users", column: "seller_id"
   add_foreign_key "ratings", "users", column: "rated_user_id"
   add_foreign_key "ratings", "users", column: "rater_user_id"
+  add_foreign_key "sns_credentials", "users"
+  add_foreign_key "trades", "products"
+  add_foreign_key "trades", "users", column: "buyer_id"
+  add_foreign_key "trades", "users", column: "seller_id"
 end
