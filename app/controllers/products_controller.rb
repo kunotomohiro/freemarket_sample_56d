@@ -146,7 +146,7 @@ class ProductsController < ApplicationController
       redirect_to product_path(@product.id)
       return
     end
-    @card = Card.find(current_user.id)
+    @card = Card.find_by(user_id: current_user.id)
     Payjp.api_key = Rails.application.credentials.payjp[:api_secret_key]
     customer = Payjp::Customer.retrieve(@card.customer_id)
     @card_information = customer.cards.retrieve(@card.card_id)
